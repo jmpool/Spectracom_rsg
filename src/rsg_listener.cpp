@@ -10,7 +10,7 @@ void chatterCallback(const nav_msgs::Odometry::ConstPtr& msg)
   y_ECEF = msg->pose.pose.position.y;
   z_ECEF = msg->pose.pose.position.z;
 
-  ROS_INFO("I heard: x[%f] y[%f] z[%f]", x_ECEF, y_ECEF, z_ECEF);
+  ROS_INFO("x[%f] y[%f] z[%f]", x_ECEF, y_ECEF, z_ECEF);
 
 }
 
@@ -22,7 +22,8 @@ void chatterCallback(const nav_msgs::Odometry::ConstPtr& msg)
 int main(int argc, char **argv)
 {
 
-  string scenarioName = "WoltoszStatic.scen";
+  // string scenarioName = "WoltoszStatic.scen";
+  string scenarioName = "blah";
 
   if(argc < 3) {
       std::cerr << "Usage: sim_controller_example <ip address> <port number>" << std::endl;
@@ -35,20 +36,45 @@ int main(int argc, char **argv)
   int port=5025;
   istringstream(argv[2]) >> port;
 
+
+
   if (!device->connect(ip,port)) {return -1;}
 
-  device->startScenario("name");
- // cout<<"Exited startScenario"<<endl;
-  device->waitForScenarioToStart();
-  device->sendRsgCommand();
-  device->queryPosition();
+  string queryString = "SOUR:SCEN:CONT";
+  string responseString = "nothing";
+  string started = "START\n";
 
+  device->query(queryString, responseString);
+  // cout<<responseString<<endl;
+  if (responseString.compare(started) != 0)
+  {
+    device->startScenario(scenarioName);
+   // // cout<<"Exited startScenario"<<endl;
+    device->waitForScenarioToStart();
+  }
+  else
+  {
+    cout<< "Scenario already running"<<endl;
+  }
   // Listen to rsg_talker
-  // ros::init(argc, argv, "listener");
-  // ros::NodeHandle n;
+  ros::init(argc, argv, "listener");
+  ros::NodeHandle n;
+  ros::Subscriber sub = n.subscribe("/Odometry", 1, chatterCallback);
   // ros::Subscriber sub = n.subscribe("/novatel_front/odom", 1000, chatterCallback);
-  // // ros::Subscriber sub = n.subscribe("chatter", 1000, chatterCallback);
-  // ros::spin();
+  // ros::Subscriber sub = n.subscribe("chatter", 1000, chatterCallback);
+  ros::Rate r(1); // Run at 10 Hz
+  while (ros::ok())
+  {
+    
+    ros::spinOnce();
+    cout << x_ECEF << endl;
+    device->sendRsgCommand(x_ECEF, y_ECEF, z_ECEF);
+    device->send("*OPC?");
+    // device->commandWaitToContinue();
+    device->queryPosition();
+    r.sleep();
+  }
+  
   
   return 0;
 }

@@ -19,7 +19,7 @@ namespace spectracom {
 
     bool waitForScenarioToStart();
 
-    bool sendRsgCommand();
+    bool sendRsgCommand(float x_pos, float y_pos, float z_pos);
 
     bool queryPosition();
 

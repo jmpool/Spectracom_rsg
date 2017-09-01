@@ -35,11 +35,13 @@ namespace spectracom {
 
 
 
-  bool Spectracom_rsg::sendRsgCommand()
+  bool Spectracom_rsg::sendRsgCommand(float x_pos, float y_pos, float z_pos)
   {
-    string rsgCommand = "SOUR:SCEN:ECEFPOS IMM,1000.0,2000.0,3000.0";
+    string rsgCommand = "SOUR:SCEN:ECEFPOS IMM, " + std::to_string(x_pos) +
+                                ", " + std::to_string(y_pos) +
+                                ", " + std::to_string(z_pos);
     Spectracom::send(rsgCommand);
-    Spectracom::commandWaitToContinue();
+    // Spectracom::commandWaitToContinue();
     cout<<"Sent: "<<rsgCommand<<endl;
     return true;
   }
@@ -54,7 +56,6 @@ namespace spectracom {
     cout<<"Received: "<<responseString;
     return true;
   }
-
   
 
 }
